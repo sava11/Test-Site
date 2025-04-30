@@ -1,0 +1,91 @@
+<section class="section">
+  <div class="box">
+    <div class="is-flex is-align-items-center is-justify-content-space-between mb-4">
+      <h1 class="title m-0"><%= company.name %></h1>
+      <% if (self_user && self_user.status > 1) { %>
+        <div class="buttons are-small ml-3">
+          <a class="button is-primary" href='/companies/edit/<%= company.id %>' title="Редактировать">📝</a>
+          <button class="button is-danger" onclick="deleteCompany(<%= company.id %>)" title="Удалить">❌</button>
+        </div>
+      <% } %>
+    </div>    
+    <p><strong>Описание:</strong> <%= company.description || 'Описание отсутствует' %></p>
+    <p><strong>Адрес:</strong> <%= company.address %></p>
+    <p><strong>Телефон:</strong> <%= company.phone || 'Не указан' %></p>
+    <p><strong>Email:</strong> <%= company.email || 'Не указан' %></p>
+    <% if (company.website) { %>
+      <p><strong>Сайт:</strong> <a href="<%= company.website %>" target="_blank"><%= company.website %></a></p>
+    <% } %>
+    <p><strong>Опыт работы:</strong> <%= company.experience_years %> лет</p>
+    <p><strong>Преимущества:</strong> <%= company.advantages || 'Не указаны' %></p>
+  </div>
+  
+  <!-- Услуги компании -->
+  <div class="box">
+    <h2 class="subtitle">Услуги и цены</h2>
+    <% if (company.services && company.services.length > 0) { %>
+      <table class="table is-fullwidth">
+        <thead>
+          <tr>
+            <th>Услуга</th>
+            <th>Цена</th>
+            <th>Статистика</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% company.services.forEach(service => { %>
+            <tr>
+              <td><%= service.name %></td>
+              <td><%= service.price %></td>
+              <td><a href="/companies/<%= company.id %>/statistics/<%= service.id %>">Статистика цен 📊</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p>Услуги отсутствуют.</p>
+    <% } %>
+  </div>
+  
+  <!-- Филиалы компании -->
+  <div class="box">
+    <h2 class="subtitle">Филиалы</h2>
+    <% if (company.branches && company.branches.length > 0) { %>
+      <ul>
+        <% company.branches.forEach(branch => { %>
+          <li><strong>Адрес:</strong> <%= branch.address %> 
+            <% if (branch.phone) { %> <strong>Телефон:</strong> <%= branch.phone %> <% } %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <p>Филиалы отсутствуют.</p>
+    <% } %>
+  </div>
+</section>
+<% if (self_user && self_user.status>1) { %>
+<script>
+  function deleteCompany(companyId){
+    fetch('/companies/delete/'+companyId, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Ошибка сети');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Предполагается, что сервер возвращает идентификатор созданной/обновленной компании
+      window.location.href = "/companies";
+    })
+    .catch(error => {
+      console.error('Ошибка при отправке данных:', error);
+      alert('Произошла ошибка при удалении данных компании.');
+    });
+  }
+</script>
+<% } %>

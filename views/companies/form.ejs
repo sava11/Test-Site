@@ -1,0 +1,260 @@
+<h1 class="title"><%= title %></h1>
+
+<form id="companyForm" onsubmit="return submitCompany();" method="POST" action="<%= formAction %>">
+  <!-- Основные данные компании -->
+  <div class="field">
+    <label class="label">Название</label>
+    <div class="control">
+      <input class="input" type="text" id="name" name="name" value="<%= company.name || '' %>" required>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">Описание</label>
+    <div class="control">
+      <textarea class="textarea" id="description" name="description"><%= company.description || '' %></textarea>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">Адрес</label>
+    <div class="control">
+      <input class="input" type="text" id="address" name="address" value="<%= company.address || '' %>" required>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">Телефон</label>
+    <div class="control">
+      <input class="input" type="text" id="phone" placeholder="+XX XXX-XXX-XXXX" 
+        pattern="+[0-9]{2} [0-9]{3}-[0-9]{3}-[0-9]{4}" name="phone" value="<%= company.phone || '' %>" >
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">Email</label>
+    <div class="control">
+      <input class="input" type="email" id="email" name="email" value="<%= company.email || '' %>" >
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">Сайт</label>
+    <div class="control">
+      <input class="input" type="url" id="website" name="website" value="<%= company.website || '' %>">
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">Опыт работы (лет)</label>
+    <div class="control">
+      <input class="input" type="number" id="experience_years" name="experience_years" value="<%= company.experience_years || '' %>" required>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">Преимущества</label>
+    <div class="control">
+      <textarea class="textarea" id="advantages" name="advantages"><%= company.advantages || '' %></textarea>
+    </div>
+  </div>
+
+  <!-- Сервисы компании -->
+  <h2 class="subtitle">Сервисы</h2>
+  <div id="servicesContainer">
+    <% if (company.services && company.services.length > 0) { %>
+      <% company.services.forEach(function(service) { %>
+        <div class="box service-item">
+          <div class="field is-grouped">
+            <div class="control is-expanded">
+              <input type="text" class="input service-name" placeholder="Название сервиса" value="<%= service.name %>">
+            </div>
+            <div class="control">
+              <input type="number" step="0.01" class="input service-price" placeholder="Цена" value="<%= service.price %>">
+            </div>
+            <div class="control">
+              <button type="button" class="button is-danger" onclick="removeService(this)">Удалить</button>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+  <div class="field">
+    <div class="control">
+      <button type="button" class="button is-link" onclick="addService()">Добавить сервис</button>
+    </div>
+  </div>
+
+  <!-- Филиалы компании -->
+  <h2 class="subtitle">Филиалы</h2>
+  <div id="branchesContainer">
+    <% if (company.branches && company.branches.length > 0) { %>
+      <% company.branches.forEach(function(branch) { %>
+        <div class="box branch-item">
+          <% if(branch.id) { %>
+            <input type="hidden" class="branch-id" value="<%= branch.id %>">
+          <% } %>
+          <div class="field is-grouped">
+            <div class="control is-expanded">
+              <input type="text" class="input branch-phone" placeholder="Телефон филиала" value="<%= branch.phone %>">
+            </div>
+            <div class="control is-expanded">
+              <input type="text" class="input branch-address" placeholder="Адрес филиала" value="<%= branch.address %>">
+            </div>
+            <div class="control">
+              <button type="button" class="button is-danger" onclick="removeBranch(this)">Удалить</button>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+  <div class="field">
+    <div class="control">
+      <button type="button" class="button is-link" onclick="addBranch()">Добавить филиал</button>
+    </div>
+  </div>
+
+  <!-- Кнопка сохранения -->
+  <div class="field">
+    <div class="control">
+      <button type="submit" class="button is-primary">Сохранить</button>
+    </div>
+  </div>
+</form>
+
+<!-- Подключение JavaScript -->
+<script>
+  // Функция для добавления нового сервиса
+  function addService() {
+    const container = document.getElementById('servicesContainer');
+    const div = document.createElement('div');
+    div.className = 'box service-item';
+    div.innerHTML = `
+      <div class="field is-grouped">
+        <div class="control is-expanded">
+          <input type="text" class="input service-name" placeholder="Название сервиса">
+        </div>
+        <div class="control">
+          <input type="number" step="0.01" class="input service-price" placeholder="Цена">
+        </div>
+        <div class="control">
+          <button type="button" class="button is-danger" onclick="removeService(this)">Удалить</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+
+  // Функция для удаления сервиса
+  function removeService(button) {
+    const serviceDiv = button.closest('.service-item');
+    serviceDiv.remove();
+  }
+
+  // Функция для добавления нового филиала
+  function addBranch() {
+    const container = document.getElementById('branchesContainer');
+    const div = document.createElement('div');
+    div.className = 'box branch-item';
+    div.innerHTML = `
+      <div class="field is-grouped">
+        <div class="control is-expanded">
+          <input type="tel" pattern="+[0-9]{2} [0-9]{3}-[0-9]{3}-[0-9]{4}" class="input branch-phone" placeholder="Телефон филиала">
+        </div>
+        <div class="control is-expanded">
+          <input type="text" class="input branch-address" placeholder="Адрес филиала">
+        </div>
+        <div class="control">
+          <button type="button" class="button is-danger" onclick="removeBranch(this)">Удалить</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+
+  // Функция для удаления филиала
+  function removeBranch(button) {
+    const branchDiv = button.closest('.branch-item');
+    branchDiv.remove();
+  }
+
+  // Основная функция для сбора и отправки данных
+  function submitCompany() {
+    // Формирование объекта компании
+    const companyData = {
+      name: document.getElementById('name').value,
+      description: document.getElementById('description').value,
+      address: document.getElementById('address').value,
+      phone: document.getElementById('phone').value,
+      email: document.getElementById('email').value,
+      website: document.getElementById('website').value,
+      experience_years: parseInt(document.getElementById('experience_years').value, 10) || 0,
+      advantages: document.getElementById('advantages').value,
+      services: [],
+      branches: []
+    };
+
+    // Сбор данных по сервисам
+    const serviceElements = document.querySelectorAll('.service-item');
+    serviceElements.forEach(item => {
+      const serviceName = item.querySelector('.service-name').value;
+      const priceValue = item.querySelector('.service-price').value;
+      const price = parseFloat(priceValue);
+      if (serviceName && !isNaN(price)) {
+        companyData.services.push({
+          name: serviceName,
+          price: price
+        });
+      }
+    });
+
+    // Сбор данных по филиалам
+    const branchElements = document.querySelectorAll('.branch-item');
+    branchElements.forEach(item => {
+      const branchIdElem = item.querySelector('.branch-id');
+      const branchPhone = item.querySelector('.branch-phone').value;
+      const branchAddress = item.querySelector('.branch-address').value;
+      const branchData = {
+        phone: branchPhone,
+        address: branchAddress
+      };
+      if (branchIdElem) {
+        const branchId = parseInt(branchIdElem.value, 10);
+        if (!isNaN(branchId)) {
+          branchData.id = branchId;
+        }
+      }
+      // Добавляем данные, если заполнены хотя бы телефон или адрес
+      if (branchPhone || branchAddress) {
+        companyData.branches.push(branchData);
+      }
+    });
+    // Отправка данных на сервер через fetch API
+    fetch(document.getElementById('companyForm').action, {
+      method: document.getElementById('companyForm').method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(companyData)
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Ошибка сети');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Предполагается, что сервер возвращает идентификатор созданной/обновленной компании
+      window.location.href = '/companies/' + data.companyId;
+    })
+    .catch(error => {
+      console.error('Ошибка при отправке данных:', error);
+      alert('Произошла ошибка при сохранении данных компании.');
+    });
+    
+    // Отмена стандартного отправления формы
+    return false;
+  }
+</script>

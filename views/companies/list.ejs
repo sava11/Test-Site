@@ -1,0 +1,182 @@
+<style>
+  .company-box {
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+  }
+
+  .company-box:hover {
+    background-color: #363636; /* Тёмный серый (или другой, если хочешь) */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  .company-box:hover h2 {
+    text-decoration: underline;
+  }
+</style>
+
+<section class="section">
+  <h1 class="title">Список компаний</h1>
+
+  <!-- Форма поиска -->
+  <form action="/companies/search" method="get" class="box">
+    <div class="field">
+      <label class="label" for="searchTerm">Поиск компаний</label>
+      <div class="control">
+        <input class="input" type="text" name="searchTerm" id="searchTerm" value="<%= typeof searchTerm !== 'undefined' ? searchTerm : '' %>" placeholder="Введите название или описание компании">
+      </div>
+    </div>
+
+    <div class="field mb-4">
+      <label class="label mr-2">Сортировать в алфавитном порядке:</label>
+      <div class="control">
+        <div class="select">
+          <select id="sortOrder" onchange="sortCompanies()">
+            <option value="asc">с начала</option>
+            <option value="desc">с конца</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label" for="categoryId">Категория</label>
+      <div class="control">
+        <div class="select">
+          <select name="categoryId" id="categoryId">
+            <option value="">Все категории</option>
+            <% categories.forEach(category => { %>
+              <option value="<%= category.id %>" <%= selectedCategoryId == category.id ? 'selected' : '' %>><%= category.name %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="control">
+        <button class="button is-link" type="submit">Искать</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Вывод компаний -->
+  <% if (companies && companies.length > 0) { %>
+    <div id="company-list" class="columns is-multiline">
+      <% if (self_user && self_user.status > 1) { %>
+      <div class="column is-one-third">
+        <a href="/companies/create" class="box is-block has-text-white">
+          <h2 class="title">Добавить новую компанию</h2>
+        </a>
+      </div>
+      <% } %>
+      <% companies.forEach(company => { %>
+        <div id="company-id-<%= company.id %>" class="column is-one-third">
+          <a class="box is-block has-text-white" href="/companies/<%= company.id %>">
+            <img src="/images/companies/<%= company.id %>", alt="Изображение компании">
+            <div class="is-flex is-justify-content-space-between is-align-items-center mb-2">
+              <h2 class="subtitle m-0"><%= company.name %></h2>
+              <% if (self_user && self_user.status > 1) { %>
+                <div class="buttons are-small ml-2">
+                  <button class="button is-primary action-btn" data-href="/companies/edit/<%= company.id %>" title="Редактировать">📝</button>
+                  <button class="button is-danger action-btn" data-delete-id="<%= company.id %>" title="Удалить">❌</button>
+                </div>
+              <% } %>
+            </div>
+            <p><%= company.description ? company.description.substring(0, 150) + '...' : 'Описание отсутствует' %></p>
+            <p><strong>Адрес:</strong> <%= company.address %></p>
+          </a>
+        </div>        
+      <% }) %>
+      <% if (self_user && self_user.status>1) { %>
+      <script>
+        function deleteCompany(companyId){
+          fetch('/companies/delete/'+companyId, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Ошибка сети');
+            }
+            return response.json();
+          })
+          .then(data => {
+            // Предполагается, что сервер возвращает идентификатор созданной/обновленной компании
+            // window.location.href = data.ref;
+            const list = document.getElementById("company-list");
+            const div = document.getElementById(`company-id-${companyId}`);
+            if (div) list.removeChild(div);
+          })
+          .catch(error => {
+            console.error('Ошибка при отправке данных:', error);
+            alert('Произошла ошибка при удалении данных компании.');
+          });
+        }
+      </script>
+      <% } %>
+    </div>
+  <% } else { %>
+    <p>Компании не найдены.</p>
+  <% } %>
+</section>
+<script>
+  function sortCompanies() {
+    const order = document.getElementById("sortOrder").value;
+    const container = document.getElementById("company-list");
+
+    // Собираем компании, кроме кнопки "добавить"
+    const items = Array.from(container.querySelectorAll(".column.is-one-third"))
+      .filter(el => !el.querySelector("h2.title")); // исключаем "Добавить новую компанию"
+
+    items.sort((a, b) => {
+      const nameA = a.querySelector("h2.subtitle").textContent.trim().toLowerCase();
+      const nameB = b.querySelector("h2.subtitle").textContent.trim().toLowerCase();
+      return order === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+    });
+
+    // Удаляем старые элементы (кроме "добавить компанию", если есть)
+    items.forEach(item => container.appendChild(item));
+  }
+  sortCompanies();
+  // Кнопка перехода
+  document.querySelectorAll('.action-btn[data-href]').forEach(btn => {
+    btn.addEventListener('click', event => {
+      event.stopPropagation();
+      const href = btn.getAttribute('data-href');
+      if (href) window.location.href = href;
+    });
+  });
+
+  // Кнопка удаления
+  document.querySelectorAll('.action-btn[data-delete-id]').forEach(btn => {
+    btn.addEventListener('click', event => {
+      event.stopPropagation();
+      const companyId = btn.getAttribute('data-delete-id');
+      if (!companyId) return;
+
+      if (!confirm("Вы уверены, что хотите удалить эту компанию?")) return;
+
+      fetch('/companies/delete/' + companyId, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Ошибка сети');
+        return response.json();
+      })
+      .then(data => {
+        const div = document.getElementById(`company-id-${companyId}`);
+        if (div) div.remove();
+      })
+      .catch(error => {
+        console.error('Ошибка при удалении:', error);
+        alert('Не удалось удалить компанию.');
+      });
+    });
+  });
+</script>
+

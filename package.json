@@ -1,0 +1,28 @@
+{
+  "name": "site",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mvs",
+    "site",
+    "frontend",
+    "backend"
+  ],
+  "author": "sava",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.14.1"
+  }
+}

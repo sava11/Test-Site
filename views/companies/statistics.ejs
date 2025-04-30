@@ -1,0 +1,35 @@
+<section class="section">
+  <h1 class="title">Статистика цен услуги "<%= service.name %>" для <%= company.name %></h1>
+  <div>
+    <% if (priceHistory.length > 0) { %>
+      <table class="table is-bordered is-fullwidth">
+        <thead>
+          <tr>
+            <th>Дата изменения</th>
+            <th>Цена</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% priceHistory.forEach(record => { %>
+            <tr>
+              <td><%= new Date(record.changed_at).toLocaleString() %></td>
+              <td><%= record.price %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p>Нет данных по изменениям цены для услуг.</p>
+    <% } %>
+  </div>
+  <% if (self_user) { %>
+  <div class="mt-4">
+    <a class="button is-link" href="/companies/<%= company.id %>/statistics/<%= service.id %>/csv">
+      Скачать CSV статистику
+    </a>
+  </div>
+  <% } %>
+  <!-- <div class="mt-4">
+    <a href="/companies/<%= company.id %>" class="button is-link">Вернуться к компании</a>
+  </div> -->
+</section>

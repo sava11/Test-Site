@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta login="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    <%= typeof title !== 'undefined' ? title : "Site" %>
+  </title>
+  
+  <link rel="stylesheet" href="/bulma-1.0.2/bulma/css/bulma.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body class="has-background-dark has-text-white-ter">
+  <!-- Навигация -->
+  <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item has-text-weight-bold is-size-5" href="/">
+        <!-- 🎮 DIGIART -->
+         Site
+      </a>
+
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbarMenu" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="/companies">Компании</a>
+      </div>
+      <% if (!authing) { %>
+      <div class="navbar-end">
+        <% if (self_user) { %>
+          <a class="navbar-item" href='/user/<%= self_user.login %>'>
+            <p>👤 <strong><%= self_user.login %></strong></p>
+          </a>
+          <div class="navbar-item">
+            <a class="button is-light" href="/logout">Выйти</a>
+          </div>
+          <% } else { %>
+            <div class="navbar-item">
+              <div class="buttons">
+                <a class="button is-primary" href="/register">
+                  <strong>Регистрация</strong>
+                </a>
+                <a class="button is-light" href="/login">
+                  Войти
+                </a>
+              </div>
+            </div>
+            <% } %>
+          <% } %>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Контент страницы -->
+  <section class="section">
+    <div class="container">
+      <%- body %>
+    </div>
+  </section>
+
+  <!-- Футер -->
+  <footer class="footer has-background-dark has-text-grey-light">
+    <div class="content has-text-centered">
+      <p>
+        &copy; <%= new Date().getFullYear() %> Site. Все права защищены.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // для бургер-меню на мобильных
+    document.addEventListener('DOMContentLoaded', () => {
+      const burger = document.querySelector('.navbar-burger');
+      const menu = document.getElementById(burger.dataset.target);
+      burger.addEventListener('click', () => {
+        burger.classList.toggle('is-active');
+        menu.classList.toggle('is-active');
+      });
+    });
+  </script>
+</body>
+
+</html>

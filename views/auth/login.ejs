@@ -1,0 +1,29 @@
+<div class="section">
+  <div class="container">
+    <h1 class="title">Вход</h1>
+    <% if (error) {%>
+      <div class="notification is-warning"><%= error %></div>
+    <% } %>
+    <form action="/login" method="POST">
+      <div class="field">
+        <label class="label">Логин</label>
+        <div class="control">
+          <input class="input" type="text" name="login" placeholder="Введите логин" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Пароль</label>
+        <div class="control">
+          <input class="input" type="password" name="password" placeholder="Введите пароль" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="control">
+          <button class="button is-link" type="submit">Войти</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
