@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta login="viewport" content="width=device-width, initial-scale=1">
   <title>
-    <%= typeof title !== 'undefined' ? title : "Site" %>
+    <%= typeof title !== 'undefined' ? title : "GBData" %>
   </title>
   
   <link rel="stylesheet" href="/bulma-1.0.2/bulma/css/bulma.min.css">
@@ -18,7 +18,7 @@
     <div class="navbar-brand">
       <a class="navbar-item has-text-weight-bold is-size-5" href="/">
         <!-- 🎮 DIGIART -->
-         Site
+         GBData
       </a>
 
       <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
@@ -29,24 +29,19 @@
     </div>
 
     <div id="navbarMenu" class="navbar-menu">
-      <div class="navbar-start">
+      <!-- <div class="navbar-start">
         <a class="navbar-item" href="/companies">Компании</a>
-      </div>
+      </div> -->
       <% if (!authing) { %>
       <div class="navbar-end">
         <% if (self_user) { %>
-          <a class="navbar-item" href='/user/<%= self_user.login %>'>
-            <p>👤 <strong><%= self_user.login %></strong></p>
-          </a>
           <div class="navbar-item">
+            <p>👤 <strong><%= self_user.login %></strong></p>
             <a class="button is-light" href="/logout">Выйти</a>
           </div>
           <% } else { %>
             <div class="navbar-item">
               <div class="buttons">
-                <a class="button is-primary" href="/register">
-                  <strong>Регистрация</strong>
-                </a>
                 <a class="button is-light" href="/login">
                   Войти
                 </a>
@@ -69,7 +64,7 @@
   <footer class="footer has-background-dark has-text-grey-light">
     <div class="content has-text-centered">
       <p>
-        &copy; <%= new Date().getFullYear() %> Site. Все права защищены.
+        &copy; <%= new Date().getFullYear() %> GBData.
       </p>
     </div>
   </footer>

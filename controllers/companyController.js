@@ -16,21 +16,6 @@ exports.getCompaniesList = async (req, res) => {
     }
 }
 
-// Страница подробной информации о компании
-exports.getCompanyDetails = async (req, res) => {
-    try {
-        const companyId = req.params.id;
-        const company = await companiesModel.findById(companyId);
-        if (!company) {
-            return res.status(404).send("Компания не найдена");
-        }
-        res.render('companies/details', { company });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Ошибка получения данных компании");
-    }
-}
-
 // Поиск компаний
 exports.searchCompanies = async (req, res) => {
     try {
@@ -46,6 +31,21 @@ exports.searchCompanies = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send("Ошибка поиска компаний");
+    }
+}
+
+// Страница подробной информации о компании
+exports.getCompanyDetails = async (req, res) => {
+    try {
+        const companyId = req.params.id;
+        const company = await companiesModel.findById(companyId);
+        if (!company) {
+            return res.status(404).send("Компания не найдена");
+        }
+        res.render('companies/details', { company });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Ошибка получения данных компании");
     }
 }
 

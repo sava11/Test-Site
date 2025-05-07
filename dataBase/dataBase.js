@@ -1,7 +1,11 @@
-const { Pool } = require('pg');
-
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgres://username:password@localhost:5432/yourdb'
+const mysql = require('mysql2');
+const pool = mysql.createPool({
+    // connectionLimit: 5,
+    waitForConnections:true,
+    host: process.env.DB_HOST,
+    //port:process.env.DB_PORT,
+    user: process.env.DB_USER,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD
 });
-
-module.exports = pool
+module.exports = pool;

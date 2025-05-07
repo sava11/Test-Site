@@ -1,0 +1,85 @@
+<section class="section">
+  <div class="container" style="max-width: 600px;">
+    <h1 class="title">
+      <%= mode === 'add' ? 'Добавить пользователя' : 'Редактировать пользователя' %>
+    </h1>
+
+    <form action="<%= mode === 'add' ? '/add' : '/edit/' + user.login %>" method="post" class="box">
+      <div class="field">
+        <label class="label">Логин</label>
+        <div class="control">
+          <input
+            class="input"
+            type="text"
+            name="login"
+            required
+            value="<%= user.login || '' %>"
+            <%= mode === 'edit' ? 'readonly' : '' %>
+          >
+        </div>
+      </div>
+      <% if (mode == 'add') {%>
+      <div class="field">
+        <label class="label">Пароль</label>
+        <div class="control">
+          <input
+            class="input"
+            type="password"
+            name="password"
+            <%= mode === 'add' ? 'required' : '' %>
+          >
+        </div>
+      </div>
+      <% } %>
+
+      <div class="field">
+        <label class="label">Имя</label>
+        <div class="control">
+          <input
+            class="input"
+            type="text"
+            name="f_name"
+            required
+            value="<%= user.f_name || '' %>"
+          >
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Фамилия</label>
+        <div class="control">
+          <input
+            class="input"
+            type="text"
+            name="s_name"
+            required
+            value="<%= user.s_name || '' %>"
+          >
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Отчество</label>
+        <div class="control">
+          <input
+            class="input"
+            type="text"
+            name="t_name"
+            value="<%= user.t_name || '' %>"
+          >
+        </div>
+      </div>
+
+      <div class="field is-grouped">
+        <div class="control">
+          <button class="button is-primary" type="submit">
+            <%= mode === 'add' ? 'Создать' : 'Сохранить' %>
+          </button>
+        </div>
+        <div class="control">
+          <a class="button" href="/">Отмена</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>

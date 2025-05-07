@@ -1,0 +1,139 @@
+<section class="section">
+  <div class="container">
+    <h1 class="title">Пользователи</h1>
+
+    <!-- Форма поиска -->
+    <form action="/" method="get" class="box mb-6">
+      <div class="columns is-multiline">
+        <div class="column is-3">
+          <label class="label">Логин</label>
+          <input class="input" type="text" name="login"  value="<%= filters.login || '' %>">
+        </div>
+        <div class="column is-3">
+          <label class="label">Имя</label>
+          <input class="input" type="text" name="f_name" value="<%= filters.f_name || '' %>">
+        </div>
+        <div class="column is-3">
+          <label class="label">Фамилия</label>
+          <input class="input" type="text" name="s_name" value="<%= filters.s_name || '' %>">
+        </div>
+        <div class="column is-3">
+          <label class="label">Отчество</label>
+          <input class="input" type="text" name="t_name" value="<%= filters.t_name || '' %>">
+        </div>
+      </div>
+      <div class="field">
+        <label class="label" for="date_from">Дата от</label>
+        <div class="control">
+          <input class="input" type="date" name="date_from" id="date_from" value="<%= filters.date_from || '' %>">
+        </div>
+      </div>
+    
+      <div class="field">
+        <label class="label" for="date_to">Дата до</label>
+        <div class="control">
+          <input class="input" type="date" name="date_to" id="date_to" value="<%= filters.date_to || '' %>">
+        </div>
+      </div>
+      <div class="field is-grouped">
+        <div class="control">
+          <button class="button is-link">Поиск</button>
+        </div>
+        <div class="control">
+          <a href="/" class="button">Сбросить</a>
+        </div>
+      </div>
+    </form>
+
+    <!-- Результаты -->
+    <% if (users.length) { %>
+      <table class="table is-fullwidth">
+        <thead>
+          <tr>
+            <th>Логин</th>
+            <th>Имя</th>
+            <th>Фамилия</th>
+            <th>Отчество</th>
+            <th>Создан</th>
+            <th></th>
+          </tr>
+        </thead>
+        <div class="mb-4">
+          <a href="/add" class="button is-link">Добавить пользователя</a>
+        </div>
+        <tbody>
+          <% users.forEach(u => { %>
+            <tr>
+              <td><%= u.login %></td>
+              <td><%= u.f_name %></td>
+              <td><%= u.s_name %></td>
+              <td><%= u.t_name || '-' %></td>
+              <td><%= u.created_at.toLocaleDateString('ru-RU') %></td>
+              <td>
+                <a href="/edit/<%= u.login %>" class="button is-small is-info">✏️</a>
+                <a href="/attempts/<%= u.login %>" class="button is-small is-info">попытки</a>
+                <form
+                  action="/delete/<%= u.login %>"
+                  method="post"
+                  style="display:inline;"
+                  onsubmit="return confirm('Вы уверены, что хотите запросить удаление данных этого пользователя?');"
+                  >
+                  <button type="submit" class="button is-small is-danger">🗑️</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p>Пользователи не найдены.</p>
+    <% } %>
+
+    <!-- Пагинация -->
+    <%
+// Функция для сборки query-параметров с учётом фильтров, страницы и размера
+function buildQuery(pageNum) {
+  const params = new URLSearchParams();
+  params.set('page', pageNum);
+  params.set('size', size);
+
+  // Добавляем только непустые фильтры
+  if (filters.login)     params.set('login', filters.login);
+  if (filters.f_name)    params.set('f_name', filters.f_name);
+  if (filters.s_name)    params.set('s_name', filters.s_name);
+  if (filters.t_name)    params.set('t_name', filters.t_name);
+  if (filters.date_from) params.set('date_from', filters.date_from);
+  if (filters.date_to)   params.set('date_to', filters.date_to);
+
+  return '?' + params.toString();
+}
+%>
+
+<nav class="pagination" role="navigation" aria-label="pagination">
+  <% if (page > 1) { %>
+    <a class="pagination-previous" href="<%= buildQuery(page - 1) %>">Пред.</a>
+  <% } else { %>
+    <a class="pagination-previous" disabled>Пред.</a>
+  <% } %>
+
+  <!-- <ul class="pagination-list">
+    <% 
+      // Показываем текущую страницу ±2
+      const start = Math.max(1, page - 2);
+      const end   = page + 2;
+      for (let i = start; i <= end; i++) { 
+    %>
+      <li>
+        <a
+          class="pagination-link <%= i === page ? 'is-current' : '' %>"
+          href="<%= buildQuery(i) %>"
+        ><%= i %></a>
+      </li>
+    <% } %>
+  </ul> -->
+
+  <a class="pagination-next" href="<%= buildQuery(page + 1) %>">След.</a>
+</nav>
+
+  </div>
+</section>

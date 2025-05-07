@@ -1,108 +1,76 @@
-const bcrypt = require('bcrypt');
-const userModel = require('../models/userModel');
+// authController.js
+const pool = require("../dataBase/dataBase.js");
+const crypto = require('crypto')
 
-// Отображение страницы входа
-exports.getLogin = (req, res) => {
-    res.render('auth/login', {
-        error: null,
-        authing:true
-     });
-};
+const hashPassword = password => {
+    return crypto.createHash('sha1').update(password).digest('hex')
+}
 
-// Обработка входа
-exports.postLogin = async (req, res) => {
-    const { login, password } = req.body;
-
-    try {
-        // Поиск пользователя по email
-        const user = await userModel.findByLogin(login);
-        if (!user) {
-            return res.render('auth/login', { 
-                error: 'Пользователь не найден',
-                authing:true });
-        }
-
-        // Сравнение паролей
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.render('auth/login', { 
-                error: 'Неверный пароль',
-                authing:true });
-        }
-
-        // Сохранение информации о пользователе в сессии
-        req.session.user = user;
-        res.redirect('/user/'+user.login);
-    } catch (err) {
-        console.error(err);
-        res.render('auth/login', { 
-            error: 'Ошибка входа',
-            authing:true 
-        });
+const compareHashPassword = (password, hashedPassword) => {
+    if (hashPassword(password) === hashedPassword) {
+        return true
     }
+    return false
+}
+
+// Страница логина
+exports.getLogin = (req, res) => {
+    res.render('auth/login', { error: null, authing: true });
 };
 
-// Отображение страницы регистрации
-exports.getRegister = (req, res) => {
-    res.render('auth/register', { 
-        error: null,
-        authing:true 
+// Обработка логина
+exports.postLogin = (req, res) => {
+    const { login, password } = req.body;
+    pool.query("SELECT * FROM users WHERE login = ?", [login], async (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.render('auth/login', {
+                error: 'Ошибка сервера при поиске пользователя',
+                authing: true
+            });
+        }
+        const user = results[0];
+        if (!user) {
+            return res.render('auth/login', {
+                error: 'Пользователь не найден',
+                authing: true
+            });
+        }
+
+        const isMatch = compareHashPassword(password, user.password);
+        if (!isMatch) {
+            return res.render('auth/login', {
+                error: 'Неверный пароль',
+                authing: true
+            });
+        }
+
+        req.session.user = user;
+        // res.cookie("userSession", req.session.user, {
+        //     httpOnly: true,
+        //     signed: true, // Подписанная кука
+        //     secure: false, // Установите true при HTTPS
+        //     maxAge: 1000 * 60 * 60 * 24,
+        // });
+        res.redirect('/');
     });
 };
 
-// Обработка регистрации
-exports.postRegister = async (req, res) => {
-    const { email, password, login } = req.body;
-    try {
-        // Проверка существования пользователя
-        const existingUser = await userModel.findByLogin(login);
-        if (existingUser) {
-            return res.render('auth/register', { 
-                error: 'Пользователь с таким логином уже существует',
-                authing:true
-            });
-        }
-        // Хэширование пароля
-        const hashedPassword = await bcrypt.hash(password, 10);
-        // Создание нового пользователя
-        await userModel.create({ login, email, password: hashedPassword });
-        res.redirect('/login');
-    } catch (err) {
-        console.error(err);
-        res.render('auth/register', { 
-            error: 'Ошибка регистрации',
-            authing:true 
-        });
-    }
-};
-
-// Выход пользователя
+// Выход
 exports.logout = (req, res) => {
-    req.session.destroy((err) => {
+    req.session.destroy(err => {
         if (err) console.error(err);
         res.redirect('/');
     });
 };
 
-// Функция-посредник для проверки аутентификации пользователя
+// Middleware проверки
 exports.isAuthenticated = (req, res, next) => {
-    if (req.session && req.session.user) {
-        return next();
-    }
+    if (req.session && req.session.user) return next();
     res.redirect('/login');
-}
+};
 
 exports.isNotAuthenticated = (req, res, next) => {
-    if (!req.session || !req.session.user) {
-        return next();
-    }
+    if (!req.session || !req.session.user) return next();
     res.redirect('/register');
-}
-
-
-exports.isNotUser = (req, res, next) => {
-    if (req.session && req.session.user && req.session.user.status>=2) {
-        return next();
-    }
-    res.redirect(req.get('Referer') || '/');
-}
+};

@@ -41,19 +41,17 @@ app.use((req, res, next) => {
 const homeRouter = require("./routes/homeRouter.js");
 const authRouter = require("./routes/authRouter.js");
 const userRouter = require("./routes/userRouter.js");
-const companiesRouter = require("./routes/companiesRouter.js");
-const imagesRouter = require('./routes/imageRouter');
+// const companiesRouter = require("./routes/companiesRouter.js");
 
 // Применение routers
 app.use("/", homeRouter);
 app.use("/", authRouter);
 app.use("/user", userRouter);
-app.use("/companies", companiesRouter);
-app.use('/images', imageRouter);
+// app.use("/companies", companiesRouter);
 
 module.exports = app;
 
 if (require.main === module) {
     app.listen(port, () => console.log(
-        `Сервер запущен на порту: ${port} и ожидает подключений...`));
+        `Сервер запущен на: http://localhost:${port} и ожидает подключений...`));
 }

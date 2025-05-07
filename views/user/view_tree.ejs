@@ -1,0 +1,90 @@
+<section class="section">
+  <div class="container">
+    <h1 class="title">Пройденные уровни и попытки: <%= login %></h1>
+
+    <% if (Object.keys(tree).length) { %>
+      <div class="content">
+        <% Object.keys(tree).forEach((levelId, idx) => { 
+             const attempts = tree[levelId];
+        %>
+        <details class="box">
+          <summary class="is-size-5 has-text-weight-bold">
+            Уровень <%= levelId %>
+          </summary>
+
+          <!-- График для уровня с адаптивной шириной и скроллом -->
+          <div class="chart-scroll" style="overflow-x:auto;">
+            <canvas id="chart-level-<%= idx %>" width="<%= attempts.length>3 ? attempts.length * 100 : 600 %>" height="300"></canvas>
+          </div>
+
+          <!-- <table class="table is-fullwidth is-striped mt-3">
+            <thead>
+              <tr>
+                <th>Очки</th>
+                <th>Собрано</th>
+                <th>Без повреждений</th>
+                <th>Дата записи</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% attempts.forEach(attempt => { %>
+                <tr>
+                  <td><%= attempt.points %></td>
+                  <td><%= attempt.collected %></td>
+                  <td><%= attempt.no_hit ? 'Да' : 'Нет' %></td>
+                  <td><%= new Date(attempt.record_date).toLocaleString('ru-RU', {
+                        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+                      }) %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table> -->
+        </details>
+        <% }) %>
+      </div>
+
+      <!-- Подключаем Chart.js -->
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        <% Object.keys(tree).forEach((levelId, idx) => { 
+             const attempts = tree[levelId];
+             const labels = attempts.map(a => `"${new Date(a.record_date).toLocaleDateString('ru-RU')}"`);
+             const dataPoints = attempts.map(a => a.points);
+             const dataCollected = attempts.map(a => a.collected);
+             const dataNoHit = attempts.map(a => a.no_hit ? 1 : 0);
+        %>
+        const ctx<%= idx %> = document.getElementById('chart-level-<%= idx %>').getContext('2d');
+        new Chart(ctx<%= idx %>, {
+          type: 'line',
+          data: {
+            labels: [<%- labels.join(',') %>],
+            datasets: [
+              { label: 'Очки',            data: [<%- dataPoints.join(',') %>],    fill: false, tension: 0.1 },
+              { label: 'Собрано',         data: [<%- dataCollected.join(',') %>], fill: false, tension: 0.1 },
+              { label: 'Без повреждений', data: [<%- dataNoHit.join(',') %>],     fill: false, tension: 0.1 }
+            ]
+          },
+          options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            scales: {
+              x: { title: { display: true, text: 'Дата' } },
+              y: { title: { display: true, text: 'Значение' }, beginAtZero: true }
+            },
+            plugins: { legend: { position: 'top', labels: { 
+              color: 'rgb(255, 255, 255)', 
+              font: {size: 14, family: 'Verdana, sans-serif' }
+            }}}
+          }
+        });
+        <% }) %>
+      });
+      </script>
+
+    <% } else { %>
+      <p>У пользователя нет записей о попытках.</p>
+    <% } %>
+  </div>
+</section>
