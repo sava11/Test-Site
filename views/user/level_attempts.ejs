@@ -8,7 +8,7 @@
             <tr>
               <th>Очки</th>
               <th>Собрано</th>
-              <th>Без повреждений</th>
+              <th>повреждения</th>
               <th>Дата записи</th>
             </tr>
           </thead>
@@ -17,7 +17,7 @@
               <tr>
                 <td><%= attempt.points %></td>
                 <td><%= attempt.collected %></td>
-                <td><%= attempt.no_hit ? 'Да' : 'Нет' %></td>
+                <td><%= attempt.hits %></td>
                 <td><%= new Date(attempt.record_date).toLocaleString() %></td>
               </tr>
             <% }) %>

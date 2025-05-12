@@ -31,7 +31,7 @@
                 <tr>
                   <td><%= attempt.points %></td>
                   <td><%= attempt.collected %></td>
-                  <td><%= attempt.no_hit ? 'Да' : 'Нет' %></td>
+                  <td><%= attempt.hits %></td>
                   <td><%= new Date(attempt.record_date).toLocaleString('ru-RU', {
                         year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
                       }) %>
@@ -53,7 +53,7 @@
              const labels = attempts.map(a => `"${new Date(a.record_date).toLocaleDateString('ru-RU')}"`);
              const dataPoints = attempts.map(a => a.points);
              const dataCollected = attempts.map(a => a.collected);
-             const dataNoHit = attempts.map(a => a.no_hit ? 1 : 0);
+             const dataNoHit = attempts.map(a => a.hits);
         %>
         const ctx<%= idx %> = document.getElementById('chart-level-<%= idx %>').getContext('2d');
         new Chart(ctx<%= idx %>, {
@@ -63,7 +63,7 @@
             datasets: [
               { label: 'Очки',            data: [<%- dataPoints.join(',') %>],    fill: false, tension: 0.1 },
               { label: 'Собрано',         data: [<%- dataCollected.join(',') %>], fill: false, tension: 0.1 },
-              { label: 'Без повреждений', data: [<%- dataNoHit.join(',') %>],     fill: false, tension: 0.1 }
+              { label: 'повреждения', data: [<%- dataNoHit.join(',') %>],     fill: false, tension: 0.1 }
             ]
           },
           options: {

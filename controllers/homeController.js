@@ -66,7 +66,7 @@ exports.getAllAttemptsTree = (req, res, next) => {
   const { login } = req.params;
 
   const sql = `
-    SELECT ulr.level_id, ulr.points, ulr.collected, ulr.no_hit, ulr.record_date
+    SELECT ulr.level_id, ulr.points, ulr.collected, ulr.hits, ulr.record_date
     FROM user_level_records ulr
     JOIN users u ON ulr.user_login = u.login
     WHERE u.login = ?
