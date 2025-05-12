@@ -3,7 +3,7 @@ const pool = require("../dataBase/dataBase.js");
 const crypto = require('crypto')
 
 const hashPassword = password => {
-    return crypto.createHash('sha1').update(password).digest('hex')
+    return crypto.createHash('sha256').update(password).digest('hex')
 }
 
 const compareHashPassword = (password, hashedPassword) => {

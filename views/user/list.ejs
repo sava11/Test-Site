@@ -21,18 +21,18 @@
           <label class="label">Отчество</label>
           <input class="input" type="text" name="t_name" value="<%= filters.t_name || '' %>">
         </div>
-      </div>
-      <div class="field">
-        <label class="label" for="date_from">Дата от</label>
-        <div class="control">
-          <input class="input" type="date" name="date_from" id="date_from" value="<%= filters.date_from || '' %>">
+        <div class="column is-6">
+          <label class="label" for="date_from">Дата от</label>
+          <div class="control">
+            <input class="input" type="date" name="date_from" id="date_from" value="<%= filters.date_from || '' %>">
+          </div>
         </div>
-      </div>
-    
-      <div class="field">
-        <label class="label" for="date_to">Дата до</label>
-        <div class="control">
-          <input class="input" type="date" name="date_to" id="date_to" value="<%= filters.date_to || '' %>">
+      
+        <div class="column is-6">
+          <label class="label" for="date_to">Дата до</label>
+          <div class="control">
+            <input class="input" type="date" name="date_to" id="date_to" value="<%= filters.date_to || '' %>">
+          </div>
         </div>
       </div>
       <div class="field is-grouped">
