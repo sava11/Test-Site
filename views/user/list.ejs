@@ -47,6 +47,9 @@
 
     <!-- Результаты -->
     <% if (users.length) { %>
+        <div class="mb-4">
+          <a href="/add" class="button is-link">Добавить пользователя</a>
+        </div>
       <table class="table is-fullwidth">
         <thead>
           <tr>
@@ -58,9 +61,6 @@
             <th></th>
           </tr>
         </thead>
-        <div class="mb-4">
-          <a href="/add" class="button is-link">Добавить пользователя</a>
-        </div>
         <tbody>
           <% users.forEach(u => { %>
             <tr>
@@ -86,6 +86,9 @@
         </tbody>
       </table>
     <% } else { %>
+        <div class="mb-4">
+          <a href="/add" class="button is-link">Добавить пользователя</a>
+        </div>
       <p>Пользователи не найдены.</p>
     <% } %>
 
