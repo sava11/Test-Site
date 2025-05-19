@@ -22,7 +22,7 @@ exports.getUsers = (req, res, next) => {
   const pageSize = Math.min(100, Math.max(1, parseInt(size, 10)));
   const offset = (pageNum - 1) * pageSize;
 
-  const conditions = ['status = 1'];
+  const conditions = ['status = 1','udr.user_login IS NULL'];
   const params = [];
 
   if (login) { conditions.push('login LIKE ?'); params.push(`%${login}%`); }
@@ -43,12 +43,19 @@ exports.getUsers = (req, res, next) => {
   const whereClause = ' WHERE ' + conditions.join(' AND ');
 
   const sql = `
-    SELECT login, f_name, s_name, t_name, created_at
-      FROM users 
+      SELECT
+        u.login,
+        u.f_name,
+        u.s_name,
+        u.t_name,
+        u.created_at
+      FROM users AS u
+      LEFT JOIN user_delete_requests AS udr
+      ON u.login = udr.user_login
       ${whereClause}
-     ORDER BY created_at DESC
-     LIMIT ? OFFSET ?
-  `;
+      ORDER BY u.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
   params.push(pageSize, offset);
 
   pool.query(sql, params, (err, results) => {
@@ -172,6 +179,6 @@ exports.requestDeleteUser = (req, res, next) => {
   pool.query("CALL create_delete_request(?)", [login], err => {
     if (err) return next(err);
     // После запроса просто перезагружаем список
-    res.redirect('back');
+    res.redirect(req.get("Referrer"));
   });
 };
