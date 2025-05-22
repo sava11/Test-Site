@@ -36,12 +36,12 @@ exports.getUsers = (req, res, next) => {
   if (t_name) { conditions.push('t_name LIKE ?'); params.push(`%${t_name}%`); }
 
   if (date_from) {
-    conditions.push('DATE(created_at) >= ?');
+    conditions.push('DATE(DOB) >= ?');
     params.push(date_from);
   }
 
   if (date_to) {
-    conditions.push('DATE(created_at) <= ?');
+    conditions.push('DATE(DOB) <= ?');
     params.push(date_to);
   }
 
@@ -53,7 +53,7 @@ exports.getUsers = (req, res, next) => {
         u.f_name,
         u.s_name,
         u.t_name,
-        u.created_at
+        u.DOB
       FROM users AS u
       LEFT JOIN user_delete_requests AS udr
       ON u.login = udr.user_login
@@ -99,99 +99,119 @@ exports.getAllAttemptsTree = (req, res, next) => {
   });
 };
 
-exports.downloadUserAttemptsPDF = async (req, res, next) => {
+exports.downloadUserAttemptsPDF = (req, res, next) => {
   const { login } = req.params;
 
   const sql = `
     SELECT ulr.level_id, ulr.points, ulr.collected, ulr.hits, ulr.record_date
     FROM user_level_records ulr
     JOIN users u ON ulr.user_login = u.login
-    WHERE u.login = ? and ulr.level_id > 0
+    WHERE u.login = ? AND ulr.level_id > 0
     ORDER BY ulr.level_id ASC, ulr.record_date DESC
   `;
 
-  pool.query(sql, [login], async (err, rows) => {
+  pool.query(sql, [login], (err, rows) => {
     if (err) return next(err);
 
     if (!rows.length) {
       return res.status(404).json({ message: 'Нет данных для экспорта.' });
     }
 
-    // Группируем данные по level_id
+    // Сразу группируем по level_id
     const tree = {};
     rows.forEach(r => {
       if (!tree[r.level_id]) tree[r.level_id] = [];
       tree[r.level_id].push(r);
     });
 
-    try {
-      const chartImages = await Promise.all(
-        Object.values(tree).map(async attempts => {
-          const width = attempts.length > 3 ? attempts.length * 100 : 600;
-          const height = 300;
-          const canvasRender = new ChartJSNodeCanvas({ width, height });
-          const config = {
-            type: 'line',
-            data: {
-              labels: attempts.map(a => new Date(a.record_date).toLocaleDateString('ru-RU')),
-              datasets: [
-                { label: 'Очки',      data: attempts.map(a => a.points),    fill: false },
-                { label: 'Собрано',   data: attempts.map(a => a.collected), fill: false },
-                { label: 'Повреждения', data: attempts.map(a => a.hits),    fill: false },
-              ]
-            },
-            options: { /* как в EJS */ }
-          };
-          return await canvasRender.renderToDataURL(config);
-        })
-      );
+    // Второй запрос — берём ФИО пользователя
+    const userSql = `
+      SELECT f_name, s_name, t_name
+      FROM users
+      WHERE login = ?
+      LIMIT 1
+    `;
 
-      // Рендерим HTML из EJS-шаблона
-      const html = await ejs.renderFile(
-        path.join(__dirname, '../views/user/report.ejs'),
-        { login, tree, chartImages}
-      );
+    pool.query(userSql, [login], async (err2, userRows) => {
+      if (err2) return next(err2);
+      if (!userRows.length) {
+        return res.status(404).json({ message: 'Пользователь не найден.' });
+      }
 
-      // Запускаем Puppeteer
-      const browser = await puppeteer.launch();
-      const page = await browser.newPage();
+      const { f_name, s_name, t_name } = userRows[0];
 
-      // Устанавливаем содержимое страницы
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      try {
+        // Генерируем графики через chartjs-node-canvas
+        const chartImages = await Promise.all(
+          Object.values(tree).map(async attempts => {
+            const width = attempts.length > 3 ? attempts.length * 100 : 600;
+            const height = 300;
+            const canvasRender = new ChartJSNodeCanvas({ width, height });
+            const config = {
+              type: 'line',
+              data: {
+                labels: attempts.map(a => new Date(a.record_date)
+                  .toLocaleDateString('ru-RU')),
+                datasets: [
+                  { label: 'Очки',      data: attempts.map(a => a.points),    fill: false },
+                  { label: 'Собрано',   data: attempts.map(a => a.collected), fill: false },
+                  { label: 'Повреждения', data: attempts.map(a => a.hits),    fill: false },
+                ]
+              },
+              options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                scales: {
+                  x: { title: { display: true, text: 'Дата' } },
+                  y: { title: { display: true, text: 'Значение' }, beginAtZero: true }
+                },
+                plugins: {
+                  legend: { position: 'top' }
+                }
+              }
+            };
+            return canvasRender.renderToDataURL(config);
+          })
+        );
 
-      // Генерируем путь к временной папке
-      const exportDir = path.join(__dirname, '../exports');
-      if (!fs.existsSync(exportDir)) fs.mkdirSync(exportDir, { recursive: true });
+        // Рендерим HTML, передаём login, ФИО, tree и массив картинок
+        const html = await ejs.renderFile(
+          path.join(__dirname, '../views/user/report.ejs'),
+          { login, f_name, s_name, t_name, tree, chartImages }
+        );
 
-      const fileName = `${login}_report_${Date.now()}.pdf`;
-      const filePath = path.join(exportDir, fileName);
+        // Запускаем Puppeteer и сохраняем PDF
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: 'networkidle0' });
 
-      // Сохраняем PDF
-      await page.pdf({
-        path: filePath,
-        format: 'A4',
-        printBackground: true,
-      });
+        const exportDir = path.join(__dirname, '../exports');
+        if (!fs.existsSync(exportDir)) fs.mkdirSync(exportDir, { recursive: true });
 
-      await browser.close();
+        const fileName = `${login}_report_${Date.now().toLocaleString("RU")}.pdf`;
+        const filePath = path.join(exportDir, fileName);
+        await page.pdf({ path: filePath, format: 'A4', printBackground: true });
+        await browser.close();
 
-      // Отправляем файл клиенту
-      res.download(filePath, `user_report_${login}.pdf`, err => {
-        if (err) {
-          console.error('Ошибка при отправке файла:', err);
-          res.status(500).json({ message: 'Ошибка загрузки файла' });
-        }
-        // Удаляем файл после отправки
-        setTimeout(() => {
-          fs.unlink(filePath, err => {
-            if (err) console.error('Ошибка при удалении файла:', err);
-          });
-        }, 10000); // Удаляем через 10 секунд
-      });
-    } catch (error) {
-      console.error('Ошибка при генерации PDF:', error);
-      res.status(500).json({ message: 'Ошибка при генерации PDF' });
-    }
+        // Отправляем клиенту
+        res.download(filePath, `user_report_${login}.pdf`, err3 => {
+          if (err3) {
+            console.error('Ошибка при отправке файла:', err3);
+            return res.status(500).json({ message: 'Ошибка загрузки файла' });
+          }
+          // Удаляем временный файл через 10 сек.
+          setTimeout(() => {
+            fs.unlink(filePath, e => {
+              if (e) console.error('Ошибка при удалении файла:', e);
+            });
+          }, 10000);
+        });
+
+      } catch (genErr) {
+        console.error('Ошибка при генерации PDF:', genErr);
+        res.status(500).json({ message: 'Ошибка при генерации PDF' });
+      }
+    });
   });
 };
 
@@ -206,13 +226,13 @@ exports.getAddUser = (req, res) => {
 // Обработка POST /add
 exports.postAddUser = async (req, res, next) => {
   try {
-    const { login, password, f_name, s_name, t_name } = req.body;
+    const { login, password, f_name, s_name, t_name, DOB } = req.body;
     const hash = hashPassword(password);
     const sql = `
-      INSERT INTO users (login, password, f_name, s_name, t_name, status)
-      VALUES (?, ?, ?, ?, ?, 1)
+      INSERT INTO users (login, password, f_name, s_name, t_name, DOB, status)
+      VALUES (?, ?, ?, ?, ?, ?, 1)
     `;
-    await pool.promise().execute(sql, [login, hash, f_name, s_name, t_name]);
+    await pool.promise().execute(sql, [login, hash, f_name, s_name, t_name, DOB]);
     res.redirect('/');
   } catch (err) {
     next(err);
@@ -223,7 +243,7 @@ exports.postAddUser = async (req, res, next) => {
 exports.getEditUser = (req, res, next) => {
   const { login } = req.params;
   const sql = `
-    SELECT login, f_name, s_name, t_name
+    SELECT login, f_name, s_name, t_name, DOB
       FROM users
      WHERE login = ? AND status = 1
      LIMIT 1
@@ -242,7 +262,7 @@ exports.getEditUser = (req, res, next) => {
 exports.postEditUser = async (req, res, next) => {
   try {
     const oldLogin = req.params.login;
-    const { login, f_name, s_name, t_name } = req.body;
+    const { login, f_name, s_name, t_name, DOB } = req.body;
     const fields = [];
     const params = [];
 
@@ -251,14 +271,14 @@ exports.postEditUser = async (req, res, next) => {
     params.push(login);
 
     // если смена пароля
-    if (password) {
-      const hash = hashPassword(password);
-      fields.push('password = ?');
-      params.push(hash);
-    }
+    // if (password) {
+    //   const hash = hashPassword(password);
+    //   fields.push('password = ?');
+    //   params.push(hash);
+    // }
 
-    fields.push('f_name = ?', 's_name = ?', 't_name = ?');
-    params.push(f_name, s_name, t_name);
+    fields.push('f_name = ?', 's_name = ?', 't_name = ?', 'DOB = ?');
+    params.push(f_name, s_name, t_name, DOB);
 
     params.push(oldLogin);
 

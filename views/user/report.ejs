@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Статистика игрока <%= login %></title>
   <script src="/chart.js/dist/chart.umd.js"></script>
-    <style>
+  <style>
     body {
       font-family: sans-serif;
       padding: 2rem;
@@ -33,8 +33,8 @@
   </style>
 </head>
 <body>
-  <h1>Пройденные уровни и попытки: <%= login %></h1>
-
+  <!-- <h1>Пройденные уровни и попытки: <%= login %></h1> -->
+  <h2>Пациент: <%= s_name %> <%= f_name %> <%= t_name %></h2>
   <% if (Object.keys(tree).length) { %>
     <% Object.keys(tree).forEach((levelId, idx) => {
          const attempts = tree[levelId];
@@ -49,6 +49,7 @@
 
         <!-- График -->
         <div class="chart-container">
+          
           <img src="<%= chartImages[idx] %>" width="<%= attempts.length > 3 ? attempts.length * 100 : 600 %>"></img>
         </div>
 
@@ -58,7 +59,7 @@
             <tr>
               <th>Очки</th>
               <th>Собрано</th>
-              <th>Без повреждений</th>
+              <th>Повреждения</th>
               <th>Дата</th>
             </tr>
           </thead>

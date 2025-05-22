@@ -3,10 +3,10 @@ const pool = require("../dataBase/dataBase.js");
 
 module.exports = {
     // Создание нового пользователя
-    create: async ({ login, password, f_name, s_name, t_name, status }) => {
+    create: async ({ login, password, f_name, s_name, t_name, DOB, status }) => {
         const [result] = await pool.execute(
-            'INSERT INTO users (login, password, f_name, s_name, t_name, status) VALUES (?, ?, ?, ?, ?, ?)',
-            [login, password, f_name, s_name, t_name, status]
+            'INSERT INTO users (login, password, f_name, s_name, t_name, DOB, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [login, password, f_name, s_name, t_name, DOB, status]
         );
         return { id: result.insertId };
     },

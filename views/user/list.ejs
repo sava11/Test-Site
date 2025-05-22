@@ -57,7 +57,7 @@
             <th>Имя</th>
             <th>Фамилия</th>
             <th>Отчество</th>
-            <th>Создан</th>
+            <th>Дата рождения</th>
             <th></th>
           </tr>
         </thead>
@@ -68,7 +68,7 @@
               <td><%= u.f_name %></td>
               <td><%= u.s_name %></td>
               <td><%= u.t_name || '-' %></td>
-              <td><%= u.created_at.toLocaleDateString('ru-RU') %></td>
+              <td><%= u.DOB.toLocaleDateString('ru-RU') %></td>
               <td>
                 <a href="/edit/<%= u.login %>" class="button is-small is-info">✏️</a>
                 <a href="/attempts/<%= u.login %>" class="button is-small is-info">попытки</a>
