@@ -40,14 +40,10 @@ app.use((req, res, next) => {
 // Создание routers
 const homeRouter = require("./routes/homeRouter.js");
 const authRouter = require("./routes/authRouter.js");
-const userRouter = require("./routes/userRouter.js");
-// const companiesRouter = require("./routes/companiesRouter.js");
 
 // Применение routers
 app.use("/", homeRouter);
 app.use("/", authRouter);
-app.use("/user", userRouter);
-// app.use("/companies", companiesRouter);
 
 module.exports = app;
 
