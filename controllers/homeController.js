@@ -1,8 +1,13 @@
 const pool = require('../dataBase/dataBase');
-const crypto = require('crypto')
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const ejs = require('ejs');
+const puppeteer = require('puppeteer');
+const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 
 const hashPassword = password => {
-  return crypto.createHash('sha256').update(password).digest('hex')
+  return crypto.createHash('sha256').update(password).digest('hex');
 }
 
 
@@ -76,7 +81,7 @@ exports.getAllAttemptsTree = (req, res, next) => {
     SELECT ulr.level_id, ulr.points, ulr.collected, ulr.hits, ulr.record_date
     FROM user_level_records ulr
     JOIN users u ON ulr.user_login = u.login
-    WHERE u.login = ?
+    WHERE u.login = ? and ulr.level_id > 0
     ORDER BY ulr.level_id ASC, ulr.record_date DESC
   `;
 
@@ -93,6 +98,103 @@ exports.getAllAttemptsTree = (req, res, next) => {
     res.render('user/view_tree', { login, tree });
   });
 };
+
+exports.downloadUserAttemptsPDF = async (req, res, next) => {
+  const { login } = req.params;
+
+  const sql = `
+    SELECT ulr.level_id, ulr.points, ulr.collected, ulr.hits, ulr.record_date
+    FROM user_level_records ulr
+    JOIN users u ON ulr.user_login = u.login
+    WHERE u.login = ? and ulr.level_id > 0
+    ORDER BY ulr.level_id ASC, ulr.record_date DESC
+  `;
+
+  pool.query(sql, [login], async (err, rows) => {
+    if (err) return next(err);
+
+    if (!rows.length) {
+      return res.status(404).json({ message: 'Нет данных для экспорта.' });
+    }
+
+    // Группируем данные по level_id
+    const tree = {};
+    rows.forEach(r => {
+      if (!tree[r.level_id]) tree[r.level_id] = [];
+      tree[r.level_id].push(r);
+    });
+
+    try {
+      const chartImages = await Promise.all(
+        Object.values(tree).map(async attempts => {
+          const width = attempts.length > 3 ? attempts.length * 100 : 600;
+          const height = 300;
+          const canvasRender = new ChartJSNodeCanvas({ width, height });
+          const config = {
+            type: 'line',
+            data: {
+              labels: attempts.map(a => new Date(a.record_date).toLocaleDateString('ru-RU')),
+              datasets: [
+                { label: 'Очки',      data: attempts.map(a => a.points),    fill: false },
+                { label: 'Собрано',   data: attempts.map(a => a.collected), fill: false },
+                { label: 'Повреждения', data: attempts.map(a => a.hits),    fill: false },
+              ]
+            },
+            options: { /* как в EJS */ }
+          };
+          return await canvasRender.renderToDataURL(config);
+        })
+      );
+
+      // Рендерим HTML из EJS-шаблона
+      const html = await ejs.renderFile(
+        path.join(__dirname, '../views/user/report.ejs'),
+        { login, tree, chartImages}
+      );
+
+      // Запускаем Puppeteer
+      const browser = await puppeteer.launch();
+      const page = await browser.newPage();
+
+      // Устанавливаем содержимое страницы
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+
+      // Генерируем путь к временной папке
+      const exportDir = path.join(__dirname, '../exports');
+      if (!fs.existsSync(exportDir)) fs.mkdirSync(exportDir, { recursive: true });
+
+      const fileName = `${login}_report_${Date.now()}.pdf`;
+      const filePath = path.join(exportDir, fileName);
+
+      // Сохраняем PDF
+      await page.pdf({
+        path: filePath,
+        format: 'A4',
+        printBackground: true,
+      });
+
+      await browser.close();
+
+      // Отправляем файл клиенту
+      res.download(filePath, `user_report_${login}.pdf`, err => {
+        if (err) {
+          console.error('Ошибка при отправке файла:', err);
+          res.status(500).json({ message: 'Ошибка загрузки файла' });
+        }
+        // Удаляем файл после отправки
+        setTimeout(() => {
+          fs.unlink(filePath, err => {
+            if (err) console.error('Ошибка при удалении файла:', err);
+          });
+        }, 10000); // Удаляем через 10 секунд
+      });
+    } catch (error) {
+      console.error('Ошибка при генерации PDF:', error);
+      res.status(500).json({ message: 'Ошибка при генерации PDF' });
+    }
+  });
+};
+
 
 exports.getAddUser = (req, res) => {
   res.render('user/add_edit_user', {

@@ -7,6 +7,8 @@ const {isAuthenticated} = require('../controllers/authController');
 // Главная страница
 router.get('/', isAuthenticated, homeController.getUsers);
 router.get('/attempts/:login', isAuthenticated, homeController.getAllAttemptsTree);
+
+router.get('/attempts/:login/pdf-report', homeController.downloadUserAttemptsPDF);
 // Форма добавления пользователя
 router.get('/add', isAuthenticated, homeController.getAddUser);
 router.post('/add', isAuthenticated, homeController.postAddUser);

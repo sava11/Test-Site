@@ -1,6 +1,15 @@
 <section class="section">
   <div class="container">
-    <h1 class="title">Пройденные уровни и попытки: <%= login %></h1>
+    <div class="columns is-vcentered">
+      <div class="column">
+        <h1 class="title">Пройденные уровни и попытки: <%= login %></h1>
+      </div>
+      <div class="column is-narrow">
+        <a class="button is-link" href="/attempts/<%= login %>/pdf-report">
+          скачать отчёт
+        </a>
+      </div>
+    </div>
 
     <% if (Object.keys(tree).length) { %>
       <div class="content">
@@ -16,30 +25,6 @@
           <div class="chart-scroll" style="overflow-x:auto;">
             <canvas id="chart-level-<%= idx %>" width="<%= attempts.length>3 ? attempts.length * 100 : 600 %>" height="300"></canvas>
           </div>
-
-          <!-- <table class="table is-fullwidth is-striped mt-3">
-            <thead>
-              <tr>
-                <th>Очки</th>
-                <th>Собрано</th>
-                <th>Без повреждений</th>
-                <th>Дата записи</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% attempts.forEach(attempt => { %>
-                <tr>
-                  <td><%= attempt.points %></td>
-                  <td><%= attempt.collected %></td>
-                  <td><%= attempt.hits %></td>
-                  <td><%= new Date(attempt.record_date).toLocaleString('ru-RU', {
-                        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
-                      }) %>
-                  </td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table> -->
         </details>
         <% }) %>
       </div>
