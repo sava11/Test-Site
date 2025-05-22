@@ -3,7 +3,7 @@
     <h1 class="title">Пользователи</h1>
 
     <!-- Форма поиска -->
-    <form action="/" method="get" class="box mb-6">
+    <form action="/" method="get" class="box mb-4">
       <div class="columns is-multiline">
         <div class="column is-3">
           <label class="label">Логин</label>
@@ -42,14 +42,14 @@
         <div class="control">
           <a href="/" class="button">Сбросить</a>
         </div>
+        <div class="control is-narrow" style="display: flex; margin-left: auto;">
+          <a href="/add" class="button is-link">Добавить пользователя</a>
+        </div>
       </div>
     </form>
 
     <!-- Результаты -->
     <% if (users.length) { %>
-        <div class="mb-4">
-          <a href="/add" class="button is-link">Добавить пользователя</a>
-        </div>
       <table class="table is-fullwidth">
         <thead>
           <tr>

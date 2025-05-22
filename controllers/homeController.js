@@ -82,7 +82,7 @@ exports.getAllAttemptsTree = (req, res, next) => {
     FROM user_level_records ulr
     JOIN users u ON ulr.user_login = u.login
     WHERE u.login = ? and ulr.level_id > 0
-    ORDER BY ulr.level_id ASC, ulr.record_date DESC
+    ORDER BY ulr.level_id ASC, ulr.record_date ASC
   `;
 
   pool.query(sql, [login], (err, rows) => {
@@ -107,7 +107,7 @@ exports.downloadUserAttemptsPDF = (req, res, next) => {
     FROM user_level_records ulr
     JOIN users u ON ulr.user_login = u.login
     WHERE u.login = ? AND ulr.level_id > 0
-    ORDER BY ulr.level_id ASC, ulr.record_date DESC
+    ORDER BY ulr.level_id ASC, ulr.record_date ASC
   `;
 
   pool.query(sql, [login], (err, rows) => {
