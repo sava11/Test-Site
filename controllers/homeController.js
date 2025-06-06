@@ -190,7 +190,41 @@ exports.downloadUserAttemptsPDF = (req, res, next) => {
 
         const fileName = `${login}_report_${Date.now().toLocaleString("RU")}.pdf`;
         const filePath = path.join(exportDir, fileName);
-        await page.pdf({ path: filePath, format: 'A4', printBackground: true });
+        // Путь к изображению
+        const logoPath = path.join(__dirname, '../public/imgs/albreht_logo.png');
+        // Чтение файла и преобразование в строку Base64
+        const logoImage = fs.readFileSync(logoPath).toString('base64');
+        // Создание строки Base64 для вставки в HTML
+        const logoBase64 = `data:image/png;base64,${logoImage}`;
+        await page.pdf({
+          path: filePath,
+          format: 'A4',
+          printBackground: true,
+          displayHeaderFooter: true,
+          headerTemplate: `
+            <div style="width: 100%; font-size: 10px; padding: 0 1cm; display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-weight: bold; font-size: 14px;">
+                ФГБУ ФНОЦ МСЭ и Р им. Г.А. Альбрехта Минтруда России
+              </div>
+              <div>
+                <img src="${logoBase64}" style="height: 60px;" />
+              </div>
+            </div>
+          `,
+          footerTemplate: `
+            <div style="width: 100%; font-size: 14px; padding: 0 1cm; display: flex; justify-content: space-between;">
+              <div>${s_name} ${f_name} ${t_name}</div>
+              <div><span class="date"></span></div>
+              <div>Страница <span class="pageNumber"></span> из <span class="totalPages"></span></div>
+            </div>
+          `,
+          margin: {
+            top: '2cm',
+            bottom: '2cm',
+            left: '1cm',
+            right: '1cm'
+          }
+        });
         await browser.close();
 
         // Отправляем клиенту
